@@ -1,6 +1,8 @@
 import gym, numpy as np
 from agent.MLPDQN import MLPDQN
+from utility.utility import disable_other_log
 
+disable_other_log()
 env = gym.make("CartPole-v0")
 agent = MLPDQN(env)
 s = env.reset()
