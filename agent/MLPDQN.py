@@ -11,17 +11,10 @@ class MLPDQN(object):
         self.replay = ExpReplay(50000)
         self.sess.run(tf.global_variables_initializer())
 
-    def def_action(self):
-        s = tf.placeholder(tf.float32, [None] + list(self._env.observation_space.shape))
-        with tf.variable_scope('q_net', reuse=False):
-            q, _ = self.network(s)
-        act = tf.argmax(q, axis=1)
-        return s, act
-
     def take_action(self, obs, eps):
         if np.random.random() < eps:
             return np.random.randint(self._env.action_space.n)
-        return self.sess.run(self.graph['act'], feed_dict={self.graph['act_s']: np.array(obs)[None]})[0]
+        return self.sess.run(self.graph['act'], feed_dict={self.graph['s']: np.array(obs)[None]})[0]
 
     def network(self, x):
         w_init, b_init = tf.contrib.layers.xavier_initializer(), tf.zeros_initializer()
@@ -40,17 +33,17 @@ class MLPDQN(object):
         return y, weights
 
     def build_graph(self):
-        act_s, act = self.def_action()
-
         s = tf.placeholder(tf.float32, [None] + list(self._env.observation_space.shape))
         a = tf.placeholder(tf.int32, [None])
         r = tf.placeholder(tf.float32, [None])
         t = tf.placeholder(tf.float32, [None])
         s_ = tf.placeholder(tf.float32, [None] + list(self._env.observation_space.shape))
 
-        with tf.variable_scope('q_net', reuse=True):
+        with tf.variable_scope('q_net', reuse=False):
             q, q_net_w = self.network(s)
         q_var = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='q_net')
+
+        act = tf.argmax(q, axis=1)
 
         with tf.variable_scope('q_target_net', reuse=False):
             q_target, q_target_w = self.network(s_)
@@ -70,7 +63,7 @@ class MLPDQN(object):
 
         update_target_expr = [tf.assign(t, o) for t, o in zip(q_target_w, q_net_w)]
 
-        return {'act_s': act_s, 'act': act, 's': s, 'a': a, 'r': r, 't': t, 's_': s_, 'train_op': train_op,
+        return {'act': act, 's': s, 'a': a, 'r': r, 't': t, 's_': s_, 'train_op': train_op,
                 'loss': loss, 'update_target_expr': update_target_expr}
 
     def store_transition(self, s, a, r, t, s_):

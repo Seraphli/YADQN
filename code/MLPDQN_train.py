@@ -27,3 +27,5 @@ for step in range(100000):
         mean_100ep_reward = round(np.mean(episode_rewards[-101:-1]), 1)
         num_episodes = len(episode_rewards)
         print('t: %.2e, n:%d, r:%.2f, ep:%d, l:%.3e' % (step, num_episodes, mean_100ep_reward, int(eps * 100), loss))
+        if mean_100ep_reward > 100:
+            break
