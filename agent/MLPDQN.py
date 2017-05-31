@@ -74,21 +74,10 @@ class MLPDQN(object):
                 'loss': loss, 'update_target_expr': update_target_expr}
 
     def store_transition(self, s, a, r, t, s_):
-        self.replay.append((s, a, r, float(t), s_))
+        self.replay.add(s, a, r, float(t), s_)
 
     def train(self):
-        batch = self.replay.batch(32)
-        s = []
-        a = []
-        r = []
-        t = []
-        s_ = []
-        for i in batch:
-            s.append(i[0])
-            a.append(i[1])
-            r.append(i[2])
-            t.append(i[3])
-            s_.append(i[4])
+        s, a, r, t, s_ = self.replay.batch(32)
         _, loss = self.sess.run([self.graph['train_op'], self.graph['loss']],
                                 feed_dict={self.graph['s']: s, self.graph['a']: a, self.graph['r']: r,
                                            self.graph['t']: t, self.graph['s_']: s_, })
