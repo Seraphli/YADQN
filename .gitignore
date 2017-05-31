@@ -1,1 +1,5 @@
 .idea
+tf_log
+log
+tmp
+/config/OpenAI.yml

@@ -1,13 +1,17 @@
 import tensorflow as tf, numpy as np
 from utility.exp_replay import ExpReplay
 from utility.loss import huber_loss, minimize_and_clip
+from utility.utility import get_path
 
 
 class MLPDQN(object):
-    def __init__(self, env):
-        self._env = env
+    def __init__(self, params):
+        self._env = params['env']
+        self.save_path = get_path('tf_log/' + params['env_name'])
+        self.logger = params['logger']
         self.sess = tf.Session()
         self.graph = self.build_graph()
+        self.saver = tf.train.Saver()
         self.replay = ExpReplay(50000)
         self.sess.run(tf.global_variables_initializer())
 
@@ -78,3 +82,16 @@ class MLPDQN(object):
 
     def update_target(self):
         self.sess.run(self.graph['update_target_expr'])
+
+    def load(self):
+        checkpoint = tf.train.get_checkpoint_state(self.save_path)
+        if checkpoint and checkpoint.model_checkpoint_path:
+            self.saver.restore(self.sess, checkpoint.model_checkpoint_path)
+            self.logger.info('Successfully loaded: %s' % checkpoint.model_checkpoint_path)
+            return True
+        else:
+            self.logger.info('Could not find old network weights')
+            return False
+
+    def save(self):
+        self.saver.save(self.sess, self.save_path + '/model.ckpt')
