@@ -2,6 +2,7 @@ import tensorflow as tf, numpy as np
 from utility.exp_replay import ExpReplay
 from utility.loss import huber_loss, minimize_and_clip
 from utility.utility import get_path
+from utility.model import mlp
 
 
 class MLPDQN(object):
@@ -9,7 +10,8 @@ class MLPDQN(object):
         self._env = params['env']
         self.save_path = get_path('tf_log/' + params['env_name'])
         self.logger = params['logger']
-        self.sess = tf.Session()
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.3)
+        self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
         self.graph = self.build_graph()
         self.saver = tf.train.Saver()
         self.replay = ExpReplay(50000)
@@ -20,22 +22,6 @@ class MLPDQN(object):
             return np.random.randint(self._env.action_space.n)
         return self.sess.run(self.graph['act'], feed_dict={self.graph['s']: np.array(obs)[None]})[0]
 
-    def network(self, x):
-        w_init, b_init = tf.contrib.layers.xavier_initializer(), tf.zeros_initializer()
-        y = x
-        weights = []
-        with tf.variable_scope('hidden'):
-            w = tf.get_variable("w", [list(self._env.observation_space.shape)[0], 64], initializer=w_init)
-            b = tf.get_variable("b", [64], initializer=b_init)
-            y = tf.nn.relu(tf.matmul(y, w) + b)
-        weights += [w, b]
-        with tf.variable_scope('output'):
-            w = tf.get_variable("w", [64, self._env.action_space.n], initializer=w_init)
-            b = tf.get_variable("b", [self._env.action_space.n], initializer=b_init)
-            y = tf.matmul(y, w) + b
-        weights += [w, b]
-        return y, weights
-
     def build_graph(self):
         s = tf.placeholder(tf.float32, [None] + list(self._env.observation_space.shape))
         a = tf.placeholder(tf.int32, [None])
@@ -43,14 +29,15 @@ class MLPDQN(object):
         t = tf.placeholder(tf.float32, [None])
         s_ = tf.placeholder(tf.float32, [None] + list(self._env.observation_space.shape))
 
+        network_shape = [list(self._env.observation_space.shape)[0], 80, self._env.action_space.n]
         with tf.variable_scope('q_net', reuse=False):
-            q, q_net_w = self.network(s)
+            q, q_net_w = mlp(s, network_shape)
         q_var = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='q_net')
 
         act = tf.argmax(q, axis=1)
 
         with tf.variable_scope('q_target_net', reuse=False):
-            q_target, q_target_w = self.network(s_)
+            q_target, q_target_w = mlp(s_, network_shape)
         q_target_var = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='q_target_net')
 
         q_selected = tf.reduce_sum(q * tf.one_hot(a, self._env.action_space.n), 1)
@@ -58,7 +45,7 @@ class MLPDQN(object):
 
         q_target_best_masked = (1.0 - t) * q_target_best
 
-        q_target_selected = r + 0.99 * q_target_best_masked
+        q_target_selected = r + 1.0 * q_target_best_masked
         error = q_selected - tf.stop_gradient(q_target_selected)
         loss = tf.reduce_mean(huber_loss(error))
 
