@@ -10,7 +10,7 @@ class MLPDQN(object):
         self._env = params['env']
         self.save_path = get_path('tf_log/' + params['env_name'])
         self.logger = params['logger']
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.3)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.2)
         self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
         self.graph = self.build_graph()
         self.saver = tf.train.Saver()

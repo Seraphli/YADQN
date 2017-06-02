@@ -2,6 +2,7 @@ import yaml, os, gym, numpy as np
 from gym import wrappers
 from agent.MLPDQN import MLPDQN
 from utility.utility import disable_other_log, init_logger, get_path, load_config
+from utility.exp_replay import PriorityQueue, Sequence
 
 
 class Game():
@@ -24,6 +25,10 @@ class Game():
         loss = 0
         save_mean_reward = None
         render_enable = False
+        replay_empty = True
+        high_queue = PriorityQueue()
+        low_queue = PriorityQueue()
+        seq = Sequence()
         for step in range(cfg['TimeStep']):
             if self.train_terminal(locals()):
                 break
@@ -34,8 +39,13 @@ class Game():
             if render_enable:
                 env.render()
             wrap_r = r
+            # if a == 2:
+            #     wrap_r = r - 0.7
+            # else:
+            #     wrap_r = r
             # wrap_r = r + (1 - s_[0]) * 20 + (1 - s_[1]) * 20
             agent.store_transition(s, a, wrap_r, t, s_)
+            seq.append(s, a, wrap_r, t, s_)
             s = s_
             episode_rewards[-1] += r
             episode_w_rewards[-1] += wrap_r
@@ -45,8 +55,26 @@ class Game():
                 episode_rewards.append(0)
                 episode_w_rewards.append(0)
                 episode_len.append(0)
+                high_queue.push(seq.score, seq)
+                low_queue.push(-seq.score, seq)
+                if len(high_queue) > 10:
+                    high_queue.pop()
+                if len(low_queue) > 10:
+                    low_queue.pop()
+                seq = Sequence()
 
-            if step > 1000:
+            if t and len(episode_rewards) % 20 == 0:
+                [high_queue.pop() for _ in range(len(high_queue) - 2)]
+                [low_queue.pop() for _ in range(len(low_queue) - 2)]
+                for _seq in high_queue:
+                    for _sample in _seq[1]:
+                        agent.store_transition(*_sample)
+                for _seq in low_queue:
+                    for _sample in _seq[1]:
+                        agent.store_transition(*_sample)
+                replay_empty = False
+
+            if not replay_empty:
                 loss = agent.train()
 
             if step > 1000 and step % 500 == 0:
