@@ -3,4 +3,4 @@ Train:
   Epsilon:
     Start: 1.0
     End: 0.02
-    Total: 50000
+    Total: 40000

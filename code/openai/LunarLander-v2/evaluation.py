@@ -19,9 +19,11 @@ class Game():
         agent.load()
         s = env.reset()
         episode_rewards = [0.0]
+        episode_w_rewards = [0.0]
         episode_len = [0]
         loss = 0
         save_mean_reward = None
+        render_enable = False
         for step in range(cfg['TimeStep']):
             if self.train_terminal(locals()):
                 break
@@ -29,15 +31,27 @@ class Game():
                           step / cfg['Epsilon']['Total'], cfg['Epsilon']['Start']), cfg['Epsilon']['End'])
             a = agent.take_action(s, eps)
             s_, r, t, info = env.step(a)
-            wrap_r = r
-            # wrap_r = r + (1 - s_[0]) * 20 + (1 - s_[1]) * 20
+            if render_enable:
+                env.render()
+            # wrap_r = r
+            # if t and episode_len[-1] > 300:
+            # if t:
+            #     wrap_r = r - (0.01 * episode_len[-1]) ** 3
+            # else:
+            #     wrap_r = r
+            if a == 2:
+                wrap_r = r - 0.7
+            else:
+                wrap_r = r
             agent.store_transition(s, a, wrap_r, t, s_)
             s = s_
             episode_rewards[-1] += r
+            episode_w_rewards[-1] += wrap_r
             episode_len[-1] += 1
             if t:
                 s = env.reset()
                 episode_rewards.append(0)
+                episode_w_rewards.append(0)
                 episode_len.append(0)
 
             if step > 1000:
@@ -48,10 +62,11 @@ class Game():
 
             if t and len(episode_rewards) % 10 == 0:
                 mean_100ep_reward = np.mean(episode_rewards[-101:-1])
-                mean_100ep_len = np.mean(episode_len[-101:-1])
+                mean_100ep_w_reward = np.mean(episode_w_rewards[-101:-1])
+                mean_10ep_len = np.mean(episode_len[-11:-1])
                 num_episodes = len(episode_rewards)
-                self.logger.info('t: %.2e, n:%d, r:%.2f, len:%.2f, ep:%d, l:%.3e' % (
-                    step, num_episodes, mean_100ep_reward, mean_100ep_len, int(eps * 100), loss))
+                self.logger.info('t: %.2e, n:%d, r:%.2f, wr:%.2f, len:%.2f, ep:%d, l:%.3e' % (
+                    step, num_episodes, mean_100ep_reward, mean_100ep_w_reward, mean_10ep_len, int(eps * 100), loss))
             if t and len(episode_rewards) % 10 == 0 and eps == cfg['Epsilon']['End'] \
                     and (not save_mean_reward or save_mean_reward < mean_100ep_reward):
                 agent.save()
