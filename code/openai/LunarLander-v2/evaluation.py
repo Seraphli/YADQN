@@ -15,6 +15,8 @@ class Game():
     def train(self):
         cfg = self.cfg['Train']
         env = gym.make(self.env_name)
+        tmp_path = get_path('tmp/' + self.env_name + '-experiment-%05d' % np.random.randint(99999))
+        env = wrappers.Monitor(env, tmp_path)
         agent = MLPDQN({'env': env, 'env_name': self.env_name, 'logger': self.logger})
         agent.load()
         s = env.reset()
@@ -43,6 +45,9 @@ class Game():
                 wrap_r = r - 0.7
             else:
                 wrap_r = r
+            # wrap_r = r
+            # if t and abs(s_[0]) < 0.1 and abs(s_[1]) < 0.1:
+            #     wrap_r += 100
             agent.store_transition(s, a, wrap_r, t, s_)
             s = s_
             episode_rewards[-1] += r
