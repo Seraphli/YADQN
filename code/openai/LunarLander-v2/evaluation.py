@@ -72,6 +72,8 @@ class Game():
                 for _seq in low_queue:
                     for _sample in _seq[1]:
                         agent.store_transition(*_sample)
+                [high_queue.pop() for _ in range(2)]
+                [low_queue.pop() for _ in range(2)]
                 replay_empty = False
 
             if not replay_empty:
