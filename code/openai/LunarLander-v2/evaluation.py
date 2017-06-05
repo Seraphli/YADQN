@@ -38,13 +38,13 @@ class Game():
             s_, r, t, info = env.step(a)
             if render_enable:
                 env.render()
-            wrap_r = r
-            # if a == 2:
-            #     wrap_r = r - 0.7
-            # else:
-            #     wrap_r = r
+            # wrap_r = r
+            if a == 2:
+                wrap_r = r - 0.7
+            else:
+                wrap_r = r
             # wrap_r = r + (1 - s_[0]) * 20 + (1 - s_[1]) * 20
-            agent.store_transition(s, a, wrap_r, t, s_)
+            # agent.store_transition(s, a, wrap_r, t, s_)
             seq.append(s, a, wrap_r, t, s_)
             s = s_
             episode_rewards[-1] += r
@@ -64,20 +64,24 @@ class Game():
                 seq = Sequence()
 
             if t and len(episode_rewards) % 20 == 0:
-                [high_queue.pop() for _ in range(len(high_queue) - 2)]
-                [low_queue.pop() for _ in range(len(low_queue) - 2)]
-                for _seq in high_queue:
-                    for _sample in _seq[1]:
-                        agent.store_transition(*_sample)
+                # [high_queue.pop() for _ in range(len(high_queue) - 2)]
+                # [low_queue.pop() for _ in range(len(low_queue) - 2)]
                 for _seq in low_queue:
                     for _sample in _seq[1]:
                         agent.store_transition(*_sample)
-                [high_queue.pop() for _ in range(2)]
-                [low_queue.pop() for _ in range(2)]
+                for _seq in high_queue:
+                    for _sample in _seq[1]:
+                        agent.store_transition(*_sample)
+                # [high_queue.pop() for _ in range(2)]
+                # [low_queue.pop() for _ in range(2)]
                 replay_empty = False
 
-            if not replay_empty:
-                loss = agent.train()
+            if t and not replay_empty:
+                losses = []
+                for _ in range(1000):
+                    loss = agent.train()
+                    losses.append(loss)
+                loss = np.mean(losses)
 
             if step > 1000 and step % 500 == 0:
                 agent.update_target()
