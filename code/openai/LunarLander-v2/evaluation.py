@@ -33,7 +33,11 @@ class Game():
             s_, r, t, info = env.step(a)
             if render_enable:
                 env.render()
-            wrap_r = r
+            # wrap_r = r
+            if a == 2:
+                wrap_r = r - 0.7
+            else:
+                wrap_r = r
             # wrap_r = r + (1 - s_[0]) * 20 + (1 - s_[1]) * 20
             agent.store_transition(s, a, wrap_r, t, s_)
             s = s_
@@ -49,7 +53,7 @@ class Game():
             if step > 1000:
                 loss = agent.train()
 
-            if step > 1000 and step % 500 == 0:
+            if step > 1000 and step % 2000 == 0:
                 agent.update_target()
 
             if t and len(episode_rewards) % 10 == 0:
