@@ -44,7 +44,7 @@ class Game():
             else:
                 wrap_r = r
             # wrap_r = r + (1 - s_[0]) * 20 + (1 - s_[1]) * 20
-            # agent.store_transition(s, a, wrap_r, t, s_)
+            agent.store_transition(s, a, wrap_r, t, s_)
             seq.append(s, a, wrap_r, t, s_)
             s = s_
             episode_rewards[-1] += r
@@ -83,7 +83,7 @@ class Game():
                     losses.append(loss)
                 loss = np.mean(losses)
 
-            if step > 1000 and step % 500 == 0:
+            if step > 1000 and step % 2000 == 0:
                 agent.update_target()
 
             if t and len(episode_rewards) % 10 == 0:
