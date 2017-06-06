@@ -35,16 +35,16 @@ class Game():
             s_, r, t, info = env.step(a)
             if render_enable:
                 env.render()
-            # wrap_r = r
+            wrap_r = r
             # if t and episode_len[-1] > 300:
             # if t:
             #     wrap_r = r - (0.01 * episode_len[-1]) ** 3
             # else:
             #     wrap_r = r
-            if a == 2:
-                wrap_r = r - 0.7
-            else:
-                wrap_r = r
+            # if a == 2:
+            #     wrap_r = r - 0.7
+            # else:
+            #     wrap_r = r
             # wrap_r = r
             # if t and abs(s_[0]) < 0.1 and abs(s_[1]) < 0.1:
             #     wrap_r += 100

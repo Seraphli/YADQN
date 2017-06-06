@@ -29,7 +29,7 @@ class MLPDQN(object):
         t = tf.placeholder(tf.float32, [None])
         s_ = tf.placeholder(tf.float32, [None] + list(self._env.observation_space.shape))
 
-        network_shape = [list(self._env.observation_space.shape)[0], 128, 64, self._env.action_space.n]
+        network_shape = [list(self._env.observation_space.shape)[0], 256, 512, 256, self._env.action_space.n]
         with tf.variable_scope('q_net', reuse=False):
             q, q_net_w = mlp(s, network_shape)
         q_var = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='q_net')
@@ -61,7 +61,7 @@ class MLPDQN(object):
         self.replay.add(s, a, r, float(t), s_)
 
     def train(self):
-        s, a, r, t, s_ = self.replay.batch(128)
+        s, a, r, t, s_ = self.replay.batch(512)
         _, loss = self.sess.run([self.graph['train_op'], self.graph['loss']],
                                 feed_dict={self.graph['s']: s, self.graph['a']: a, self.graph['r']: r,
                                            self.graph['t']: t, self.graph['s_']: s_, })
