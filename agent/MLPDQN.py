@@ -29,7 +29,7 @@ class MLPDQN(object):
         t = tf.placeholder(tf.float32, [None])
         s_ = tf.placeholder(tf.float32, [None] + list(self._env.observation_space.shape))
 
-        network_shape = [list(self._env.observation_space.shape)[0], 256, 512, 256, self._env.action_space.n]
+        network_shape = [list(self._env.observation_space.shape)[0], 512, 512, 512, self._env.action_space.n]
         with tf.variable_scope('q_net', reuse=False):
             q, q_net_w = mlp(s, network_shape)
         q_var = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='q_net')

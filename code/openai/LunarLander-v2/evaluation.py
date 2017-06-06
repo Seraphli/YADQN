@@ -62,7 +62,7 @@ class Game():
             if step > 1000:
                 loss = agent.train()
 
-            if step > 1000 and step % 500 == 0:
+            if step > 1000 and step % 5000 == 0:
                 agent.update_target()
 
             if t and len(episode_rewards) % 10 == 0:
