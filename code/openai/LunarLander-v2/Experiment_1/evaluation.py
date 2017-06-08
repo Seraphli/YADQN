@@ -7,7 +7,7 @@ from utility.utility import disable_other_log, init_logger, get_path, load_confi
 class Game():
     def __init__(self):
         disable_other_log()
-        self.env_name = os.path.basename(os.path.dirname(__file__))
+        self.env_name = 'LunarLander-v2'
         with open('cfg.yml') as f:
             self.cfg = yaml.load(f)
         self.logger = init_logger(self.env_name)
@@ -33,11 +33,11 @@ class Game():
             s_, r, t, info = env.step(a)
             if render_enable:
                 env.render()
-            # wrap_r = r
-            if a == 2:
-                wrap_r = r - 0.7
-            else:
-                wrap_r = r
+            wrap_r = r
+            # if a == 2:
+            #     wrap_r = r - 0.7
+            # else:
+            #     wrap_r = r
             # wrap_r = r + (1 - s_[0]) * 20 + (1 - s_[1]) * 20
             agent.store_transition(s, a, wrap_r, t, s_)
             s = s_
