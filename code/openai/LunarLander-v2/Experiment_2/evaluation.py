@@ -50,8 +50,12 @@ class Game():
                 episode_w_rewards.append(0)
                 episode_len.append(0)
 
-            if step > 1000:
-                loss = agent.train()
+            if step > 1000 and t:
+                losses = []
+                for _ in range(200):
+                    loss = agent.train()
+                    losses.append(loss)
+                loss = np.mean(losses)
 
             if step > 1000 and step % 2000 == 0:
                 agent.update_target()

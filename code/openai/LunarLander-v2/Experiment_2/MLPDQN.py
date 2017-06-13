@@ -28,7 +28,7 @@ class MLPDQN(object):
         y = []
         weights = []
         with tf.variable_scope('layer'):
-            for _ in range(256):
+            for _ in range(shape[-2]):
                 with tf.variable_scope('part%d' % _):
                     _y, _w = AND(x, [8])
                     y += [_y]
@@ -57,7 +57,7 @@ class MLPDQN(object):
         t = tf.placeholder(tf.float32, [None])
         s_ = tf.placeholder(tf.float32, [None] + list(self._env.observation_space.shape))
 
-        network_shape = [list(self._env.observation_space.shape)[0], 256, self._env.action_space.n]
+        network_shape = [list(self._env.observation_space.shape)[0], 64, self._env.action_space.n]
         with tf.variable_scope('q_net', reuse=False):
             q, q_net_w = self._def_layers(s, network_shape)
         q_var = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='q_net')
@@ -89,7 +89,7 @@ class MLPDQN(object):
         self.replay.add(s, a, r, float(t), s_)
 
     def train(self):
-        s, a, r, t, s_ = self.replay.batch(512)
+        s, a, r, t, s_ = self.replay.batch(32)
         _, loss = self.sess.run([self.graph['train_op'], self.graph['loss']],
                                 feed_dict={self.graph['s']: s, self.graph['a']: a, self.graph['r']: r,
                                            self.graph['t']: t, self.graph['s_']: s_, })
