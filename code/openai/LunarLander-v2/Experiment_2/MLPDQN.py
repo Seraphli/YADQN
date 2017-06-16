@@ -9,7 +9,7 @@ from logic_unit import *
 class MLPDQN(object):
     def __init__(self, params):
         self._env = params['env']
-        self.save_path = get_path('tf_log/' + params['env_name'])
+        self.save_path = get_path('tf_log/' + params['env_name'] + '-' + params['experiment'])
         self.logger = params['logger']
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
         self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))

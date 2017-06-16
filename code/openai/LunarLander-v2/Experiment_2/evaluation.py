@@ -15,7 +15,7 @@ class Game():
     def train(self):
         cfg = self.cfg['Train']
         env = gym.make(self.env_name)
-        agent = MLPDQN({'env': env, 'env_name': self.env_name, 'logger': self.logger})
+        agent = MLPDQN({'env': env, 'env_name': self.env_name, 'experiment': '2', 'logger': self.logger})
         agent.load()
         s = env.reset()
         episode_rewards = [0.0]
