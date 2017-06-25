@@ -43,30 +43,34 @@ class MLPDQN(object):
                     _y, _w = XOR(x, [shape[0]])
                     y += [_y]
                     weights += _w
-            layer1 = tf.reshape(tf.stack(y, axis=1), [-1, shape[1] * 4])
-        y = []
+            l1 = tf.reshape(tf.stack(y, axis=1), [-1, shape[1] * 4])
         with tf.variable_scope('layer2'):
+            w = tf.get_variable("w", [shape[1] * 4, shape[1] * 4], initializer=w_init)
+            b = tf.get_variable("b", [shape[1] * 4], initializer=b_init)
+            l2 = tf.matmul(l1, w) + b
+        y = []
+        with tf.variable_scope('layer3'):
             for _ in range(shape[2]):
                 with tf.variable_scope('part%d' % _):
-                    _y, _w = AND(layer1, [shape[1] * 4])
+                    _y, _w = AND(l2, [shape[1] * 4])
                     y += [_y]
                     weights += _w
-                    _y, _w = OR(layer1, [shape[1] * 4])
+                    _y, _w = OR(l2, [shape[1] * 4])
                     y += [_y]
                     weights += _w
-                    _y, _w = NOT(layer1, [shape[1] * 4])
+                    _y, _w = NOT(l2, [shape[1] * 4])
                     y += [_y]
                     weights += _w
-                    _y, _w = XOR(layer1, [shape[1] * 4])
+                    _y, _w = XOR(l2, [shape[1] * 4])
                     y += [_y]
                     weights += _w
-            y = tf.reshape(tf.stack(y, axis=1), [-1, shape[2] * 4])
+            l3 = tf.reshape(tf.stack(y, axis=1), [-1, shape[2] * 4])
         with tf.variable_scope('output'):
             w = tf.get_variable("w", [shape[-2] * 4, shape[-1]], initializer=w_init)
             b = tf.get_variable("b", [shape[-1]], initializer=b_init)
-            y = tf.matmul(y, w) + b
+            out = tf.matmul(l3, w) + b
         weights += [w, b]
-        return y, weights
+        return out, weights
 
     def build_graph(self):
         s = tf.placeholder(tf.float32, [None] + list(self._env.observation_space.shape))
