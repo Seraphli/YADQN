@@ -1,0 +1,6 @@
+Train:
+  TimeStep: 10000000
+  Epsilon:
+    Start: 1.0
+    End: 0.05
+    Total: 50000
